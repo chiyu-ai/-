@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>养殖环境实时监测系统</title>
+  <link rel="stylesheet" href="style.css?v=20261101" />
+</head>
+<body>
+  <!-- 登录界面 -->
+  <div class="login-mask" id="loginMask">
+    <div class="login-box">
+      <div class="login-logo">🌾</div>
+      <h2>养殖环境实时监测系统</h2>
+      <p class="login-hint">演示账号：<b>1</b>　密码：<b>1</b></p>
+      <div class="form-row"><label>账号</label><input id="loginUser" type="text" placeholder="请输入账号" autocomplete="username" /></div>
+      <div class="form-row"><label>密码</label><input id="loginPass" type="password" placeholder="请输入密码" autocomplete="current-password" /></div>
+      <button class="btn primary login-btn" id="loginBtn">登 录</button>
+      <p class="login-err" id="loginErr"></p>
+    </div>
+  </div>
+
+  <!-- 顶部导航 -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🌾</span>
+      <div class="brand-text">
+        <h1>养殖环境实时监测系统</h1>
+        <p>家禽家畜养殖 · 环境监控 · 智能诊断</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn ghost" id="btnMarket" type="button">市场行情</button>
+      <button class="btn ghost" id="btnWarnings" type="button">查询预警记录</button>
+      <button class="btn ghost" id="btnRealKb" type="button">真实知识库（查询患病记录）</button>
+    </div>
+    <div class="conn-status" id="connStatus">
+      <span class="dot"></span>
+      <span id="connText">连接中…</span>
+    </div>
+  </header>
+
+  <!-- 状态栏（汇总） -->
+  <section class="statusbar" id="statusbar">
+    <div class="stat">
+      <span class="stat-label">在线设备</span>
+      <span class="stat-value" id="statOnline">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">设备总数</span>
+      <span class="stat-value" id="statTotal">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label" id="statWeatherLabel">今日天气</span>
+      <span class="stat-value" id="statWeather">--</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">异常项数</span>
+      <span class="stat-value" id="statAlert">0</span>
+    </div>
+  </section>
+
+  <!-- 告警横幅 -->
+  <div class="alerts" id="alerts">
+    <div class="alerts-title">环境异常提醒</div>
+    <ul id="alertsList"></ul>
+  </div>
+
+  <main class="layout">
+    <!-- 左：数据分析 + 设备 + 手册 -->
+    <section class="monitor">
+      <div class="section-head section-head--first">
+        <h2>数据诊断分析</h2>
+        <button class="btn ghost" id="btnRefreshAnalysis">刷新分析</button>
+      </div>
+      <div class="analysis-grid" id="analysis">
+        <div class="empty"><div class="empty-icon">📈</div><p>暂无数据，等待设备上报后自动生成分析结论与趋势图</p></div>
+      </div>
+
+      <div class="section-head">
+        <h2>设备实时数据</h2>
+        <div class="actions">
+          <button class="btn primary" id="btnAddDevice">＋ 添加设备</button>
+          <button class="btn ghost" id="btnSimulate">模拟上报</button>
+          <button class="btn ghost danger" id="btnClear">清空设备</button>
+        </div>
+      </div>
+      <div class="devices" id="devices">
+        <div class="empty" id="emptyState">
+          <div class="empty-icon">📭</div>
+          <p>暂无设备数据</p>
+          <p class="empty-hint">点击「添加设备」录入物种信息，或让 ESP32 向 <br/><code>POST /api/data</code> 发送 JSON 数据</p>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2>养殖手册</h2>
+        <div class="manual-search-wrap">
+          <input id="manualSearch" class="manual-search" type="text" placeholder="搜索物种或品种，如：鸡、北京油鸡、猪…" autocomplete="off" />
+          <span class="meta-tag" id="speciesCount">共 0 类</span>
+        </div>
+      </div>
+      <div class="manual-select-row">
+        <select id="speciesSelect" class="species-select"></select>
+        <span class="manual-hint">选择类别 → 弹出该类的品种窗口</span>
+      </div>
+      <div class="knowledge" id="knowledge"></div>
+    </section>
+
+    <!-- 右：智能体聊天 -->
+    <aside class="chat-panel" id="chatPanel">
+      <div class="chat-head">
+        <h2>智能兽医助手</h2>
+        <div class="chat-head-actions">
+          <span class="badge" id="agentBadge">待接入</span>
+          <button class="icon-btn" id="chatClear" title="清空当前对话" type="button">🧹</button>
+          <button class="icon-btn" id="chatFullscreen" title="全屏/还原" type="button">⛶</button>
+        </div>
+      </div>
+      <div class="chat-profile">
+        <span class="profile-label">个体档案</span>
+        <input id="individualId" class="profile-input" type="text" placeholder="如：北京油鸡001号（不同个体分开记录）" autocomplete="off" />
+        <button class="btn ghost profile-load" id="individualLoad" type="button">载入</button>
+        <button class="btn ghost profile-new" id="individualNew" type="button">新建</button>
+        <span class="profile-status" id="individualStatus"></span>
+      </div>
+      <div class="chat-convos" id="chatConvos"></div>
+      <div class="chat-steps" id="chatSteps"></div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg assistant">
+          <div class="msg-avatar">🤖</div>
+          <div class="msg-bubble">
+            <p>你好！我是智能兽医助手，可以结合实时环境数据帮你判断家禽家畜的病因，也可以识别你上传的照片。</p>
+            <p>先填「个体档案」编号（如北京油鸡001号），我会为该个体单独记录病史，下次可直接接着问。</p>
+            <p class="msg-meta">示例：「鸡精神萎靡、拉稀，可能是什么病？」</p>
+          </div>
+        </div>
+      </div>
+      <div class="chat-chips" id="chatChips">
+        <button class="chip" type="button" data-q="鸡精神萎靡、拉稀，可能是什么病？">鸡拉稀</button>
+        <button class="chip" type="button" data-q="猪舍温度过高会有什么影响？">猪舍高温</button>
+        <button class="chip" type="button" data-q="如何降低鸡舍氨气浓度？">降氨气</button>
+        <button class="chip" type="button" data-q="帮我看看摄像头画面里动物的状态？">看画面</button>
+        <button class="chip" type="button" id="recordIllness">记录患病</button>
+      </div>
+      <div class="chat-images" id="chatImages"></div>
+      <form class="chat-input" id="chatForm">
+        <label class="btn ghost photo-btn" for="chatImageInput" title="上传图片">📷</label>
+        <input type="file" id="chatImageInput" accept="image/*" hidden />
+        <textarea id="chatInput" rows="1" placeholder="描述家禽家畜的症状，或上传照片…"></textarea>
+        <button type="submit" id="chatSend" class="btn primary">发送</button>
+      </form>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    养殖环境实时监测系统 · ESP32 上报接口 <code>POST /api/data</code> · 智能体接口 <code>POST /api/chat</code>
+  </footer>
+
+  <!-- 设备详情弹窗（含摄像头画面） -->
+  <div class="modal-mask" id="detailModal">
+    <div class="detail-panel">
+      <div class="detail-head">
+        <h3 id="detailTitle">设备详情</h3>
+        <button class="btn ghost" id="detailClose">✕ 关闭</button>
+      </div>
+      <div class="detail-body">
+        <div class="detail-left">
+          <div class="detail-metrics" id="detailMetrics"></div>
+          <div class="detail-extra" id="detailExtra"></div>
+        </div>
+        <div class="detail-camera">
+          <div class="cam-head">
+            <span class="cam-title">实时监控画面</span>
+            <label class="switch">
+              <input type="checkbox" id="recogSwitch" />
+              <span class="slider"></span>
+              <span class="switch-label">AI 健康预警</span>
+            </label>
+          </div>
+          <div class="cam-screen">
+            <img id="camImg" alt="实时画面" style="display:none" />
+            <div class="cam-placeholder" id="camPlaceholder">
+              <div class="cam-ph-icon">📷</div>
+              <p>暂无画面</p>
+              <p class="cam-ph-hint">等待摄像头传输画面到 <code>POST /api/camera/&lt;设备ID&gt;</code></p>
+            </div>
+          </div>
+          <div class="recog-result" id="recogResult"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设备编辑弹窗 -->
+  <div class="modal-mask" id="deviceModal">
+    <div class="modal">
+      <h3 id="deviceModalTitle">设备信息</h3>
+      <div class="form-row" id="dmIdRow">
+        <label>设备 ID（与 ESP32 上报的 device_id 一致）</label>
+        <input type="text" id="dmId" placeholder="如：esp32-01" />
+      </div>
+      <div class="form-row">
+        <label>设备名称</label>
+        <input type="text" id="dmName" placeholder="如：1号鸡舍" />
+      </div>
+      <div class="form-row">
+        <label>检测物种</label>
+        <select id="dmSpecies"></select>
+      </div>
+      <div class="form-row">
+        <label>物种数量（只/头）</label>
+        <input type="number" id="dmCount" min="0" placeholder="如：500" />
+      </div>
+      <div class="form-row">
+        <label>区域占地面积（㎡）</label>
+        <input type="number" id="dmArea" min="0" placeholder="如：120" />
+      </div>
+      <div class="form-row">
+        <label>成长阶段</label>
+        <select id="dmStage">
+          <option value="">未填写</option>
+          <option value="幼年">幼年</option>
+          <option value="成年">成年</option>
+          <option value="老年">老年</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>体重（kg，可选）</label>
+        <input type="number" id="dmWeight" min="0" step="0.1" placeholder="如：2.5" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="dmCancel">取消</button>
+        <button class="btn primary" id="dmSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手册弹窗（物种 → 品种 两级） -->
+  <div class="modal-mask" id="handbookModal">
+    <div class="detail-panel handbook-panel">
+      <div class="detail-head">
+        <h3 id="hbTitle">养殖手册</h3>
+        <div class="hb-head-actions">
+          <button class="btn ghost" id="hbBack" style="display:none">← 返回品种</button>
+          <button class="btn ghost" id="hbClose">✕ 关闭</button>
+        </div>
+      </div>
+      <div class="hb-body" id="hbBody"></div>
+    </div>
+  </div>
+
+  <!-- 市场行情弹窗 -->
+  <div class="modal-mask" id="marketModal">
+    <div class="detail-panel market-panel">
+      <div class="detail-head">
+        <h3 id="marketTitle">市场行情</h3>
+        <button class="btn ghost" id="marketClose" type="button">✕ 关闭</button>
+      </div>
+      <div class="market-meta" id="marketMeta"></div>
+      <div class="market-body" id="marketBody"></div>
+      <div class="market-breed" id="marketBreed" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- 真实知识库弹窗 -->
+  <div class="modal-mask" id="realKbModal">
+    <div class="detail-panel market-panel">
+      <div class="detail-head">
+        <h3>真实知识库（本场患病记录）</h3>
+        <button class="btn ghost" id="realKbClose" type="button">✕ 关闭</button>
+      </div>
+      <div class="real-kb-body" id="realKbBody"></div>
+    </div>
+  </div>
+
+  <!-- 预警记录弹窗 -->
+  <div class="modal-mask" id="warningModal">
+    <div class="detail-panel market-panel">
+      <div class="detail-head">
+        <h3>预警记录</h3>
+        <button class="btn ghost" id="warningClose" type="button">✕ 关闭</button>
+      </div>
+      <div class="warning-body" id="warningBody"></div>
+    </div>
+  </div>
+
+  <!-- 分析详情弹窗 -->
+  <div class="modal-mask" id="analysisModal">
+    <div class="detail-panel market-panel">
+      <div class="detail-head">
+        <h3 id="analysisTitle">数据诊断分析</h3>
+        <button class="btn ghost" id="analysisClose" type="button">✕ 关闭</button>
+      </div>
+      <div class="analysis-detail" id="analysisBody"></div>
+    </div>
+  </div>
+
+  <!-- 指标曲线弹窗 -->
+  <div class="modal-mask" id="chartModal">
+    <div class="detail-panel chart-panel">
+      <div class="detail-head">
+        <h3 id="chartTitle">指标曲线</h3>
+        <button class="btn ghost" id="chartClose" type="button">✕ 关闭</button>
+      </div>
+      <div class="chart-body">
+        <canvas id="chartCanvas" width="780" height="260"></canvas>
+        <div class="chart-legend" id="chartLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=20261102"></script>
+</body>
+</html>
