@@ -1,0 +1,48 @@
+{
+  "port": 3000,
+  "host": "0.0.0.0",
+  "dataDir": "data",
+  "historyLimit": 500,
+  "offlineAfterMs": 120000,
+  "thresholds": {
+    "temperature": { "min": 10, "max": 35, "unit": "°C" },
+    "humidity": { "min": 40, "max": 80, "unit": "%" },
+    "ammonia": { "min": 0, "max": 25, "unit": "ppm" },
+    "co2": { "min": 0, "max": 3000, "unit": "ppm" },
+    "h2s": { "min": 0, "max": 5, "unit": "ppm" },
+    "light": { "min": 0, "max": 100, "unit": "%" },
+    "soil": { "min": 20, "max": 100, "unit": "%" },
+    "water": { "min": 0, "max": 100, "unit": "%" },
+    "flame": { "min": 0, "max": 0.5, "unit": "" },
+    "wind": { "min": 0, "max": 5, "unit": "m/s" },
+    "pressure": { "min": 950, "max": 1050, "unit": "hPa" },
+    "rain": { "min": 0, "max": 50, "unit": "mm" },
+    "pm25": { "min": 0, "max": 75, "unit": "μg/m³" },
+    "noise": { "min": 0, "max": 75, "unit": "dB" },
+    "o2": { "min": 19, "max": 23, "unit": "%" },
+    "soil_temp": { "min": 5, "max": 35, "unit": "°C" },
+    "feed_level": { "min": 20, "max": 100, "unit": "%" },
+    "feed_weight": { "min": 0, "max": 100, "unit": "kg" }
+  },
+  "agent": {
+    "type": "coze",
+    "baseUrl": "https://api.coze.cn",
+    "botId": "",
+    "apiKey": "",
+    "userId": "web-user",
+    "apiUrl": "",
+    "timeoutMs": 60000
+  },
+  "market": {
+    "url": ""
+  },
+  "weather": {
+    "lat": 23.13,
+    "lon": 113.26,
+    "city": "广州"
+  },
+  "auth": {
+    "username": "1",
+    "password": "1"
+  }
+}
