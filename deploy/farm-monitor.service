@@ -1,0 +1,20 @@
+[Unit]
+Description=Farm Environment Monitor (养殖环境实时监测系统)
+After=network.target
+
+[Service]
+Type=simple
+# 改成你服务器上运行该服务的用户名（确保该用户能写下面的 data 目录）
+User=www-data
+WorkingDirectory=/opt/farm-monitor
+ExecStart=/usr/bin/node /opt/farm-monitor/server.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+# 端口可用环境变量覆盖，默认取 config.json 里的 3000
+Environment=PORT=3000
+
+# 日志默认进 journald，查看：journalctl -u farm-monitor -f
+
+[Install]
+WantedBy=multi-user.target
